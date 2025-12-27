@@ -92,34 +92,6 @@ class AIService {
         }
     }
 
-    private async checkLinkExists(url: string): Promise<boolean> {
-        if (!url) return false;
-
-        try {
-            // Use a GET request with limited timeout to check if URL exists
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
-
-            const response = await fetch(url, {
-                method: 'GET',
-                signal: controller.signal,
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (compatible; ContractIQ/1.0)',
-                },
-            });
-
-            clearTimeout(timeoutId);
-
-            // Check if response is successful (2xx) and not a 404/410
-            if (response.status === 404 || response.status === 410) {
-                return false;
-            }
-            return response.ok || response.status < 400;
-        } catch {
-            // If fetch fails (network error, CORS, timeout), assume link might not exist
-            return false;
-        }
-    }
 
     private async searchLegalLink(title: string): Promise<string> {
         if (!this.config) return '';

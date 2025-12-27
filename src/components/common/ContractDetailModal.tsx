@@ -26,7 +26,13 @@ import CloseIcon from '@mui/icons-material/Close';
 import DescriptionIcon from '@mui/icons-material/Description';
 import ChatIcon from '@mui/icons-material/Chat';
 import DownloadIcon from '@mui/icons-material/Download';
-import ContractDetailView from './ContractDetailView';
+import AnalyticsIcon from '@mui/icons-material/Analytics';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import WarningIcon from '@mui/icons-material/Warning';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import RiskBadge from './RiskBadge';
 import type { Contract } from '../../types';
 import { downloadBase64File } from '../../utils/fileUtils';
 
@@ -38,6 +44,7 @@ interface ContractDetailModalProps {
 
 const ContractDetailModal: React.FC<ContractDetailModalProps> = ({ open, onClose, contract }) => {
     const navigate = useNavigate();
+    const [detailTab, setDetailTab] = React.useState(0);
 
     if (!contract) return null;
 
