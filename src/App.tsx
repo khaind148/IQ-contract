@@ -24,10 +24,10 @@ const ThemedApp: React.FC = () => {
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="analysis" element={<AnalysisPage />} />
-            <Route path="compare" element={<ComingSoon title="So sánh hợp đồng" />} />
+            {/* <Route path="compare" element={<ComingSoon title="So sánh hợp đồng" />} /> */}
             <Route path="chat" element={<ChatPage />} />
             <Route path="management" element={<ManagementPage />} />
-            <Route path="reality" element={<ComingSoon title="So sánh thực tế" />} />
+            {/* <Route path="reality" element={<ComingSoon title="So sánh thực tế" />} /> */}
             <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Routes>

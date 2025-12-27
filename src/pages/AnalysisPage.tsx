@@ -66,6 +66,11 @@ const AnalysisPage: React.FC = () => {
     const [currentContract, setCurrentContract] = useState<Contract | null>(null);
     const [analysis, setAnalysis] = useState<ContractAnalysis | null>(null);
     const [tabValue, setTabValue] = useState(0);
+
+    // Safety fix: Ensure body scroll is not locked
+    useEffect(() => {
+        document.body.style.overflow = 'unset';
+    }, []);
     const [extractedText, setExtractedText] = useState<string>('');
     const [chatLoading, setChatLoading] = useState(false);
 

@@ -29,10 +29,10 @@ interface SidebarProps {
 const menuItems = [
     { text: 'Tổng quan', icon: <DashboardIcon />, path: '/' },
     { text: 'Phân tích hợp đồng', icon: <AnalyticsIcon />, path: '/analysis' },
-    { text: 'So sánh hợp đồng', icon: <CompareIcon />, path: '/compare' },
+    // { text: 'So sánh hợp đồng', icon: <CompareIcon />, path: '/compare' },
     { text: 'Hỏi đáp AI', icon: <ChatIcon />, path: '/chat' },
     { text: 'Quản lý hợp đồng', icon: <FolderIcon />, path: '/management' },
-    { text: 'So sánh thực tế', icon: <FactCheckIcon />, path: '/reality' },
+    // { text: 'So sánh thực tế', icon: <FactCheckIcon />, path: '/reality' },
 ];
 
 const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onClose, drawerWidth }) => {

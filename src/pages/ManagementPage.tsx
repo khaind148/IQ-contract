@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Box,
     Typography,
@@ -26,6 +27,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DownloadIcon from '@mui/icons-material/Download';
+import ChatIcon from '@mui/icons-material/Chat';
 import FolderIcon from '@mui/icons-material/Folder';
 import WarningIcon from '@mui/icons-material/Warning';
 import { useAppDispatch, useAppSelector } from '../store';
@@ -35,10 +37,16 @@ import { downloadBase64File } from '../utils/fileUtils';
 import { CATEGORY_LABELS, type Contract } from '../types';
 
 const ManagementPage: React.FC = () => {
+    const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const contracts = useAppSelector((state) => state.contracts.contracts);
 
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Safety fix: Ensure body scroll is not locked
+    useEffect(() => {
+        document.body.style.overflow = 'unset';
+    }, []);
     const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -154,6 +162,14 @@ const ManagementPage: React.FC = () => {
                                         onClick={() => handleOpenDetails(contract)}
                                     >
                                         <VisibilityIcon />
+                                    </IconButton>
+                                    <IconButton
+                                        color="info"
+                                        size="small"
+                                        onClick={() => navigate(`/chat?contractId=${contract.id}`)}
+                                        title="Chat về hợp đồng"
+                                    >
+                                        <ChatIcon />
                                     </IconButton>
                                     <IconButton
                                         color="secondary"

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     Box,
     Grid,
@@ -14,12 +14,19 @@ import WarningIcon from '@mui/icons-material/Warning';
 import FolderIcon from '@mui/icons-material/Folder';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import { useAppSelector } from '../store';
+import { useAppSelector, useAppDispatch } from '../store';
 import ContractDetailModal from '../components/common/ContractDetailModal';
 import type { Contract } from '../types';
 
 const Dashboard: React.FC = () => {
     const navigate = useNavigate();
+    const dispatch = useAppDispatch();
+
+    // Safety fix: Ensure body scroll is not locked
+    useEffect(() => {
+        document.body.style.overflow = 'unset';
+    }, []);
+
     const contracts = useAppSelector((state) => state.contracts.contracts);
     const apiKey = useAppSelector((state) => state.settings.apiKey);
 
@@ -134,7 +141,7 @@ const Dashboard: React.FC = () => {
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             color: 'white',
-                                            boxShadow: `0 4px 15px ${stat.color}40`,
+                                            boxShadow: `0 4px 15px ${stat.color} 40`,
                                         }}
                                     >
                                         {stat.icon}
@@ -155,7 +162,7 @@ const Dashboard: React.FC = () => {
                                     width: 100,
                                     height: 100,
                                     borderRadius: '50%',
-                                    background: `${stat.color}10`,
+                                    background: `${stat.color} 10`,
                                 }}
                             />
                         </Card>
