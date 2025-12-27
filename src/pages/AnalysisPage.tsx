@@ -463,7 +463,7 @@ const AnalysisPage: React.FC = () => {
                                                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
                                                             <Stack direction="row" alignItems="center" spacing={1} sx={{ flexGrow: 1 }}>
-                                                                <Chip
+                                                                {/* <Chip
                                                                     label={risk.severity.toUpperCase()}
                                                                     color={
                                                                         risk.severity === 'critical' || risk.severity === 'high'
@@ -473,7 +473,7 @@ const AnalysisPage: React.FC = () => {
                                                                                 : 'info'
                                                                     }
                                                                     size="small"
-                                                                />
+                                                                /> */}
                                                                 <Typography variant="subtitle1" fontWeight={600}>
                                                                     {risk.title}
                                                                 </Typography>

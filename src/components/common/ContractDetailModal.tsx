@@ -19,7 +19,7 @@ import {
     ListItemText,
     ListItemIcon,
     Stack,
-    Chip,
+    // Chip,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import CloseIcon from '@mui/icons-material/Close';
@@ -103,7 +103,7 @@ const ContractDetailModal: React.FC<ContractDetailModalProps> = ({ open, onClose
                                             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
                                                     <Stack direction="row" alignItems="center" spacing={1} sx={{ flexGrow: 1 }}>
-                                                        <Chip
+                                                        {/* <Chip
                                                             label={risk.severity.toUpperCase()}
                                                             color={
                                                                 risk.severity === 'critical' || risk.severity === 'high'
@@ -113,7 +113,7 @@ const ContractDetailModal: React.FC<ContractDetailModalProps> = ({ open, onClose
                                                                         : 'info'
                                                             }
                                                             size="small"
-                                                        />
+                                                        /> */}
                                                         <Typography variant="body2" fontWeight={600}>{risk.title}</Typography>
                                                     </Stack>
                                                     <RiskBadge severity={risk.severity} />
