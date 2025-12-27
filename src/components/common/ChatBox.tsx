@@ -50,7 +50,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ messages, onSendMessage, loading = fa
     return (
         <Paper
             sx={{
-                height: '600px',
+                height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden',
