@@ -36,8 +36,10 @@ import { useAppDispatch, useAppSelector } from '../store';
 import { addContract, setLoading, setError } from '../store/slices/contractSlice';
 import { extractTextFromFile } from '../services/pdfService';
 import { aiService } from '../services/aiService';
-import type { Contract, ContractAnalysis, ContractCategory } from '../types';
 import { v4 as uuidv4 } from 'uuid';
+import { fileToBase64 } from '../utils/fileUtils';
+import { createSession, addMessage, setActiveChat } from '../store/slices/chatSlice';
+import type { Contract, ContractAnalysis, ContractCategory, ChatSession, ChatMessage } from '../types';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -59,11 +61,16 @@ const AnalysisPage: React.FC = () => {
     const dispatch = useAppDispatch();
     const { loading, error } = useAppSelector((state) => state.contracts);
     const settings = useAppSelector((state) => state.settings);
+    const sessions = useAppSelector((state) => state.chat.sessions);
 
     const [currentContract, setCurrentContract] = useState<Contract | null>(null);
     const [analysis, setAnalysis] = useState<ContractAnalysis | null>(null);
     const [tabValue, setTabValue] = useState(0);
     const [extractedText, setExtractedText] = useState<string>('');
+    const [chatLoading, setChatLoading] = useState(false);
+
+    // Get current chat session for the contract being analyzed
+    const currentSession = sessions.find(s => s.contractId === currentContract?.id);
 
     useEffect(() => {
         aiService.setConfig({
@@ -71,6 +78,15 @@ const AnalysisPage: React.FC = () => {
             apiKey: settings.apiKey,
         });
     }, [settings.apiProvider, settings.apiKey]);
+
+    // Update active chat when contract changes or session is created
+    useEffect(() => {
+        if (currentSession) {
+            dispatch(setActiveChat(currentSession.id));
+        } else {
+            dispatch(setActiveChat(null));
+        }
+    }, [currentContract, currentSession, dispatch]);
 
     const handleFileSelect = async (file: File) => {
         if (!settings.apiKey) {
@@ -83,7 +99,10 @@ const AnalysisPage: React.FC = () => {
 
         try {
             // Extract text from file
-            const text = await extractTextFromFile(file, settings.apiKey, settings.apiProvider);
+            const [text, base64] = await Promise.all([
+                extractTextFromFile(file, settings.apiKey, settings.apiProvider),
+                fileToBase64(file)
+            ]);
             setExtractedText(text);
 
             // Create contract object
@@ -96,6 +115,7 @@ const AnalysisPage: React.FC = () => {
                 status: 'pending',
                 tags: [],
                 fileSize: file.size,
+                fileData: base64,
             };
 
             // Analyze with AI
@@ -122,11 +142,71 @@ const AnalysisPage: React.FC = () => {
         setTabValue(newValue);
     };
 
-    const handleChatMessage = async (question: string, history: string[]) => {
-        if (!extractedText) {
-            throw new Error('Không có nội dung hợp đồng để hỏi đáp');
+    const handleSendMessage = async (content: string) => {
+        if (!currentContract?.id || !extractedText) return;
+
+        let sessionId = currentSession?.id;
+        let baseMessages = currentSession?.messages || [];
+
+        // 1. Create session if it doesn't exist
+        if (!sessionId) {
+            const welcomeMsg: ChatMessage = {
+                id: crypto.randomUUID(),
+                role: 'assistant',
+                content: 'Xin chào! Tôi đã phân tích xong hợp đồng này. Bạn có thể đặt câu hỏi về các điều khoản, rủi ro hoặc tóm tắt nội dung.',
+                timestamp: new Date().toISOString(),
+            };
+            const newSession: ChatSession = {
+                id: crypto.randomUUID(),
+                contractId: currentContract.id,
+                messages: [welcomeMsg],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+            dispatch(createSession(newSession));
+            sessionId = newSession.id;
+            baseMessages = [welcomeMsg];
         }
-        return await aiService.chatWithContract(extractedText, question, history);
+
+        // 2. Add user message
+        const userMsg: ChatMessage = {
+            id: crypto.randomUUID(),
+            role: 'user',
+            content,
+            timestamp: new Date().toISOString(),
+        };
+        dispatch(addMessage({ sessionId, message: userMsg }));
+
+        setChatLoading(true);
+        try {
+            // 3. Build history
+            const history = [...baseMessages, userMsg].map(m =>
+                `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`
+            );
+
+            // 4. Call AI service
+            const response = await aiService.chatWithContract(extractedText, content, history);
+
+            // 5. Add assistant message
+            const assistantMsg: ChatMessage = {
+                id: crypto.randomUUID(),
+                role: 'assistant',
+                content: response.answer,
+                citations: response.citations,
+                timestamp: new Date().toISOString(),
+            };
+            dispatch(addMessage({ sessionId, message: assistantMsg }));
+        } catch (error) {
+            const errorMsg: ChatMessage = {
+                id: crypto.randomUUID(),
+                role: 'assistant',
+                content: `Xin lỗi, đã có lỗi xảy ra: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                timestamp: new Date().toISOString(),
+            };
+            dispatch(addMessage({ sessionId, message: errorMsg }));
+        } finally {
+            setChatLoading(false);
+        }
     };
 
     return (
@@ -432,7 +512,9 @@ const AnalysisPage: React.FC = () => {
                                 {/* Chat Tab */}
                                 <TabPanel value={tabValue} index={5}>
                                     <ChatBox
-                                        onSendMessage={handleChatMessage}
+                                        messages={currentSession?.messages || []}
+                                        onSendMessage={handleSendMessage}
+                                        loading={chatLoading}
                                     />
                                 </TabPanel>
                             </CardContent>

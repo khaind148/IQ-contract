@@ -15,11 +15,26 @@ import FolderIcon from '@mui/icons-material/Folder';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useAppSelector } from '../store';
+import ContractDetailModal from '../components/common/ContractDetailModal';
+import type { Contract } from '../types';
 
 const Dashboard: React.FC = () => {
     const navigate = useNavigate();
     const contracts = useAppSelector((state) => state.contracts.contracts);
     const apiKey = useAppSelector((state) => state.settings.apiKey);
+
+    const [modalOpen, setModalOpen] = React.useState(false);
+    const [selectedContract, setSelectedContract] = React.useState<Contract | null>(null);
+
+    const handleOpenModal = (contract: Contract) => {
+        setSelectedContract(contract);
+        setModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setModalOpen(false);
+        setSelectedContract(null);
+    };
 
     const stats = [
         {
@@ -249,24 +264,36 @@ const Dashboard: React.FC = () => {
                         Hợp đồng gần đây
                     </Typography>
                     <Grid container spacing={2}>
-                        {contracts.slice(0, 3).map((contract) => (
+                        {contracts.slice(0, 5).map((contract) => (
                             <Grid size={{ xs: 12 }} key={contract.id}>
-                                <Card>
+                                <Card
+                                    sx={{
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease',
+                                        '&:hover': {
+                                            transform: 'scale(1.01)',
+                                            boxShadow: (theme) => theme.shadows[4],
+                                            borderColor: 'primary.main',
+                                        },
+                                        border: '1px solid transparent'
+                                    }}
+                                    onClick={() => handleOpenModal(contract)}
+                                >
                                     <CardContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                             <FolderIcon color="primary" />
                                             <Box>
                                                 <Typography fontWeight={500}>{contract.name}</Typography>
                                                 <Typography variant="caption" color="text.secondary">
-                                                    {new Date(contract.uploadedAt).toLocaleDateString('vi-VN')}
+                                                    {new Date(contract.uploadedAt).toLocaleDateString('vi-VN')} • {(contract.fileSize / 1024).toFixed(1)} KB
                                                 </Typography>
                                             </Box>
                                         </Box>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                             {contract.analysis ? (
-                                                <Chip label="Đã phân tích" size="small" color="success" />
+                                                <Chip label="Đã phân tích" size="small" color="success" variant="outlined" />
                                             ) : (
-                                                <Chip label="Chưa phân tích" size="small" />
+                                                <Chip label="Chưa phân tích" size="small" variant="outlined" />
                                             )}
                                             {contract.analysis?.risks && contract.analysis.risks.length > 0 && (
                                                 <Chip
@@ -275,6 +302,7 @@ const Dashboard: React.FC = () => {
                                                     color="warning"
                                                 />
                                             )}
+                                            <ArrowForwardIcon fontSize="small" color="action" />
                                         </Box>
                                     </CardContent>
                                 </Card>
@@ -283,6 +311,13 @@ const Dashboard: React.FC = () => {
                     </Grid>
                 </Box>
             )}
+
+            {/* Contract Detail Modal */}
+            <ContractDetailModal
+                open={modalOpen}
+                onClose={handleCloseModal}
+                contract={selectedContract}
+            />
         </Box>
     );
 };

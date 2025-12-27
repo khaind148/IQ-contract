@@ -19,6 +19,9 @@ export const localStorageMiddleware: Middleware = (store) => (next) => (action) 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
     } catch (error) {
         console.error('Failed to save state to localStorage:', error);
+        if (error instanceof Error && error.name === 'QuotaExceededError') {
+            alert('Cảnh báo: Bộ nhớ trình duyệt đã đầy (giới hạn 5MB). Bạn hãy xóa bớt một số hợp đồng cũ để lưu thêm file mới.');
+        }
     }
 
     return result;

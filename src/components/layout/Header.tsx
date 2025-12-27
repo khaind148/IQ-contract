@@ -6,11 +6,10 @@ import {
     IconButton,
     Box,
     useTheme,
-    Avatar,
     Tooltip,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import Brightness4Icon from '@mui/icons-material/Brightness4';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useNavigate } from 'react-router-dom';
@@ -48,10 +47,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, drawerWidth }) => {
         >
             <Toolbar>
                 <IconButton
-                    color="inherit"
                     edge="start"
                     onClick={onMenuClick}
-                    sx={{ mr: 2, display: { sm: 'none' } }}
+                    sx={{ mr: 2, display: { sm: 'none' }, color: 'text.secondary' }}
                 >
                     <MenuIcon />
                 </IconButton>
@@ -60,28 +58,16 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, drawerWidth }) => {
 
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Tooltip title={currentTheme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối'}>
-                        <IconButton onClick={handleThemeToggle} color="inherit">
-                            {currentTheme === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+                        <IconButton onClick={handleThemeToggle} sx={{ color: 'text.secondary' }}>
+                            {currentTheme === 'dark' ? <Brightness7Icon /> : <DarkModeIcon />}
                         </IconButton>
                     </Tooltip>
 
                     <Tooltip title="Cài đặt">
-                        <IconButton onClick={() => navigate('/settings')} color="inherit">
+                        <IconButton onClick={() => navigate('/settings')} sx={{ color: 'text.secondary' }}>
                             <SettingsIcon />
                         </IconButton>
                     </Tooltip>
-
-                    <Avatar
-                        sx={{
-                            width: 36,
-                            height: 36,
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            fontSize: '0.9rem',
-                            fontWeight: 600,
-                        }}
-                    >
-                        U
-                    </Avatar>
                 </Box>
             </Toolbar>
         </AppBar>

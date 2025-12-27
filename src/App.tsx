@@ -10,6 +10,7 @@ import AnalysisPage from './pages/AnalysisPage';
 import RiskDetectionPage from './pages/RiskDetectionPage';
 import ChatPage from './pages/ChatPage';
 import SettingsPage from './pages/SettingsPage';
+import ManagementPage from './pages/ManagementPage';
 
 // Theme wrapper component
 const ThemedApp: React.FC = () => {
@@ -27,7 +28,7 @@ const ThemedApp: React.FC = () => {
             <Route path="risks" element={<RiskDetectionPage />} />
             <Route path="compare" element={<ComingSoon title="So sánh hợp đồng" />} />
             <Route path="chat" element={<ChatPage />} />
-            <Route path="management" element={<ComingSoon title="Quản lý hợp đồng" />} />
+            <Route path="management" element={<ManagementPage />} />
             <Route path="reality" element={<ComingSoon title="So sánh thực tế" />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>

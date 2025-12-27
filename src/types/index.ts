@@ -9,15 +9,16 @@ export interface Contract {
   status: ContractStatus;
   tags: string[];
   fileSize: number;
+  fileData?: string; // Base64 representation of the file
   analysis?: ContractAnalysis;
 }
 
-export type ContractCategory = 
-  | 'labor' 
-  | 'sales' 
-  | 'rental' 
-  | 'service' 
-  | 'partnership' 
+export type ContractCategory =
+  | 'labor'
+  | 'sales'
+  | 'rental'
+  | 'service'
+  | 'partnership'
   | 'other';
 
 export type ContractStatus = 'active' | 'expired' | 'pending' | 'terminated';
@@ -59,13 +60,13 @@ export interface RiskItem {
   section: string;
 }
 
-export type RiskCategory = 
-  | 'liability' 
-  | 'termination' 
-  | 'penalty' 
-  | 'hidden_cost' 
-  | 'ambiguity' 
-  | 'compliance' 
+export type RiskCategory =
+  | 'liability'
+  | 'termination'
+  | 'penalty'
+  | 'hidden_cost'
+  | 'ambiguity'
+  | 'compliance'
   | 'other';
 
 // Comparison Types

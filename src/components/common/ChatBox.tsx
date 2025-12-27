@@ -13,27 +13,17 @@ import {
 import SendIcon from '@mui/icons-material/Send';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import PersonIcon from '@mui/icons-material/Person';
-
-interface Message {
-    role: 'user' | 'assistant';
-    content: string;
-    citations?: string[];
-}
+import type { ChatMessage } from '../../types';
 
 interface ChatBoxProps {
-    onSendMessage: (question: string, history: string[]) => Promise<{ answer: string; citations: string[] }>;
+    messages: ChatMessage[];
+    onSendMessage: (message: string) => void;
+    loading?: boolean;
 }
 
-const ChatBox: React.FC<ChatBoxProps> = ({ onSendMessage }) => {
+const ChatBox: React.FC<ChatBoxProps> = ({ messages, onSendMessage, loading = false }) => {
     const theme = useTheme();
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            role: 'assistant',
-            content: 'Xin chào! Tôi là trợ lý AI. Bạn có thể hỏi tôi bất kỳ câu hỏi nào về hợp đồng này.',
-        },
-    ]);
     const [input, setInput] = useState('');
-    const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -44,42 +34,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({ onSendMessage }) => {
         scrollToBottom();
     }, [messages]);
 
-    const handleSend = async () => {
+    const handleSend = () => {
         if (!input.trim() || loading) return;
-
-        const userMessage: Message = {
-            role: 'user',
-            content: input,
-        };
-
-        setMessages((prev) => [...prev, userMessage]);
+        onSendMessage(input);
         setInput('');
-        setLoading(true);
-
-        try {
-            // Build conversation history
-            const history = messages
-                .filter((m) => m.role === 'user' || m.role === 'assistant')
-                .map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`);
-
-            const response = await onSendMessage(input, history);
-
-            const assistantMessage: Message = {
-                role: 'assistant',
-                content: response.answer,
-                citations: response.citations,
-            };
-
-            setMessages((prev) => [...prev, assistantMessage]);
-        } catch (error) {
-            const errorMessage: Message = {
-                role: 'assistant',
-                content: `Xin lỗi, đã có lỗi xảy ra: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            };
-            setMessages((prev) => [...prev, errorMessage]);
-        } finally {
-            setLoading(false);
-        }
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -131,9 +89,16 @@ const ChatBox: React.FC<ChatBoxProps> = ({ onSendMessage }) => {
                         : 'rgba(0,0,0,0.02)',
                 }}
             >
-                {messages.map((message, index) => (
+                {messages.length === 0 && !loading && (
+                    <Box sx={{ textAlign: 'center', mt: 4, color: 'text.disabled' }}>
+                        <Typography variant="body2">
+                            Chưa có tin nhắn nào. Hãy bắt đầu bằng cách đặt câu hỏi.
+                        </Typography>
+                    </Box>
+                )}
+                {messages.map((message) => (
                     <Box
-                        key={index}
+                        key={message.id}
                         sx={{
                             display: 'flex',
                             gap: 1,

@@ -26,21 +26,31 @@ import FileUpload from '../components/common/FileUpload';
 import RiskBadge from '../components/common/RiskBadge';
 import ChatBox from '../components/common/ChatBox';
 import { useAppDispatch, useAppSelector } from '../store';
-import { setLoading, setError } from '../store/slices/contractSlice';
+import { addContract, setLoading, setError } from '../store/slices/contractSlice';
 import { extractTextFromFile } from '../services/pdfService';
 import { aiService } from '../services/aiService';
-import type { RiskItem } from '../types';
+import { fileToBase64 } from '../utils/fileUtils';
+import { createSession, addMessage, setActiveChat } from '../store/slices/chatSlice';
+import type { RiskItem, ChatSession, ChatMessage, Contract, ContractCategory } from '../types';
 
 const RiskDetectionPage: React.FC = () => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
     const { loading, error } = useAppSelector((state) => state.contracts);
     const settings = useAppSelector((state) => state.settings);
+    const sessions = useAppSelector((state) => state.chat.sessions);
 
     const [fileName, setFileName] = useState<string>('');
     const [risks, setRisks] = useState<RiskItem[]>([]);
     const [analyzing, setAnalyzing] = useState(false);
     const [extractedText, setExtractedText] = useState<string>('');
+    const [chatLoading, setChatLoading] = useState(false);
+
+    // Track the current contract ID (since we don't have a full contract object here, we use a temporary one or the one we just processed)
+    // For RiskDetectionPage, it seems it doesn't save to Redux contracts? 
+    // Wait, let's check if it should. 
+    // ChatPage depends on contractId. If we don't have a contractId, we can't save history properly.
+    // Let's see how RiskDetectionPage handles files.
 
     useEffect(() => {
         aiService.setConfig({
@@ -48,6 +58,24 @@ const RiskDetectionPage: React.FC = () => {
             apiKey: settings.apiKey,
         });
     }, [settings.apiProvider, settings.apiKey]);
+
+    // RiskDetectionPage currently doesn't seem to have a contractId in its local state.
+    // I should probably generate a temporary one or just use the filename as a pseudo-ID if we want persistence.
+    // Actually, looking at handleFileSelect, it doesn't dispatch addContract.
+    // This looks like a bug in the original code, or intended "volatile" analysis.
+    // However, to fix ChatBox, I need SOME ID.
+
+    const [tempContractId, setTempContractId] = useState<string>(crypto.randomUUID());
+
+    const currentSession = sessions.find(s => s.contractId === tempContractId);
+
+    useEffect(() => {
+        if (currentSession) {
+            dispatch(setActiveChat(currentSession.id));
+        } else {
+            dispatch(setActiveChat(null));
+        }
+    }, [tempContractId, currentSession, dispatch]);
 
     const handleFileSelect = async (file: File) => {
         if (!settings.apiKey) {
@@ -60,15 +88,41 @@ const RiskDetectionPage: React.FC = () => {
         setAnalyzing(true);
         setFileName(file.name);
         setRisks([]);
+        setTempContractId(crypto.randomUUID()); // Reset ID for new file
 
         try {
-            // Extract text from file
-            const text = await extractTextFromFile(file, settings.apiKey, settings.apiProvider);
+            // Extract text and convert file
+            const [text, base64] = await Promise.all([
+                extractTextFromFile(file, settings.apiKey, settings.apiProvider),
+                fileToBase64(file)
+            ]);
             setExtractedText(text);
 
             // Detect risks with AI
             const detectedRisks = await aiService.detectRisks(text);
             setRisks(detectedRisks);
+
+            // Save to Redux for persistence
+            const contract: Contract = {
+                id: tempContractId,
+                name: file.name,
+                content: text,
+                uploadedAt: new Date().toISOString(),
+                category: 'other' as ContractCategory,
+                status: 'pending',
+                tags: [],
+                fileSize: file.size,
+                fileData: base64,
+                analysis: {
+                    summary: `Phân tích rủi ro cho hợp đồng ${file.name}`,
+                    keyTerms: [],
+                    importantDates: [],
+                    obligations: [],
+                    risks: detectedRisks,
+                    analyzedAt: new Date().toISOString(),
+                }
+            };
+            dispatch(addContract(contract));
 
         } catch (err) {
             dispatch(setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi phân tích'));
@@ -78,11 +132,71 @@ const RiskDetectionPage: React.FC = () => {
         }
     };
 
-    const handleChatMessage = async (question: string, history: string[]) => {
-        if (!extractedText) {
-            throw new Error('Không có nội dung hợp đồng để hỏi đáp');
+    const handleSendMessage = async (content: string) => {
+        if (!tempContractId || !extractedText) return;
+
+        let sessionId = currentSession?.id;
+        let baseMessages = currentSession?.messages || [];
+
+        // 1. Create session if it doesn't exist
+        if (!sessionId) {
+            const welcomeMsg: ChatMessage = {
+                id: crypto.randomUUID(),
+                role: 'assistant',
+                content: 'Xin chào! Tôi đã phát hiện các rủi ro trong hợp đồng này. Bạn có thể hỏi tôi chi tiết về từng rủi ro hoặc cách khắc phục.',
+                timestamp: new Date().toISOString(),
+            };
+            const newSession: ChatSession = {
+                id: crypto.randomUUID(),
+                contractId: tempContractId,
+                messages: [welcomeMsg],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+            dispatch(createSession(newSession));
+            sessionId = newSession.id;
+            baseMessages = [welcomeMsg];
         }
-        return await aiService.chatWithContract(extractedText, question, history);
+
+        // 2. Add user message
+        const userMsg: ChatMessage = {
+            id: crypto.randomUUID(),
+            role: 'user',
+            content,
+            timestamp: new Date().toISOString(),
+        };
+        dispatch(addMessage({ sessionId, message: userMsg }));
+
+        setChatLoading(true);
+        try {
+            // 3. Build history
+            const history = [...baseMessages, userMsg].map(m =>
+                `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`
+            );
+
+            // 4. Call AI service
+            const response = await aiService.chatWithContract(extractedText, content, history);
+
+            // 5. Add assistant message
+            const assistantMsg: ChatMessage = {
+                id: crypto.randomUUID(),
+                role: 'assistant',
+                content: response.answer,
+                citations: response.citations,
+                timestamp: new Date().toISOString(),
+            };
+            dispatch(addMessage({ sessionId, message: assistantMsg }));
+        } catch (error) {
+            const errorMsg: ChatMessage = {
+                id: crypto.randomUUID(),
+                role: 'assistant',
+                content: `Xin lỗi, đã có lỗi xảy ra: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                timestamp: new Date().toISOString(),
+            };
+            dispatch(addMessage({ sessionId, message: errorMsg }));
+        } finally {
+            setChatLoading(false);
+        }
     };
 
     const getRiskStats = () => {
@@ -372,7 +486,11 @@ const RiskDetectionPage: React.FC = () => {
 
                                     {/* AI Q&A Section */}
                                     <Box sx={{ mt: 4 }}>
-                                        <ChatBox onSendMessage={handleChatMessage} />
+                                        <ChatBox
+                                            messages={currentSession?.messages || []}
+                                            onSendMessage={handleSendMessage}
+                                            loading={chatLoading}
+                                        />
                                     </Box>
                                 </CardContent>
                             </Card>
