@@ -14,7 +14,7 @@ class AIService {
         this.config = config;
     }
 
-    private async callGemini(prompt: string): Promise<string> {
+    private async callGemini(prompt: string): Promise<{ text: string; groundingUrls: string[] }> {
         if (!this.config?.apiKey) {
             throw new Error('API key chưa được cấu hình. Vui lòng vào Cài đặt để nhập API key.');
         }
@@ -26,6 +26,7 @@ class AIService {
             },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
+                tools: [{ google_search: {} }],
                 generationConfig: {
                     temperature: 0.7,
                     maxOutputTokens: 8192,
@@ -39,10 +40,18 @@ class AIService {
         }
 
         const data = await response.json();
-        return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+        // Extract grounding URLs from groundingMetadata
+        const groundingChunks = data.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+        const groundingUrls: string[] = groundingChunks
+            .map((chunk: any) => chunk.web?.uri)
+            .filter((uri: string | undefined) => uri);
+
+        return { text, groundingUrls };
     }
 
-    private async callOpenAI(prompt: string): Promise<string> {
+    private async callOpenAI(prompt: string, model: string = 'gpt-5.1'): Promise<string> {
         if (!this.config?.apiKey) {
             throw new Error('API key chưa được cấu hình. Vui lòng vào Cài đặt để nhập API key.');
         }
@@ -54,7 +63,7 @@ class AIService {
                 'Authorization': `Bearer ${this.config.apiKey}`,
             },
             body: JSON.stringify({
-                model: 'gpt-5-nano',
+                model,
                 messages: [{ role: 'user', content: prompt }],
                 // temperature: 0.7,
                 // max_tokens: 4096,
@@ -76,9 +85,68 @@ class AIService {
         }
 
         if (this.config.provider === 'gemini') {
-            return this.callGemini(prompt);
+            const result = await this.callGemini(prompt);
+            return result.text;
         } else {
             return this.callOpenAI(prompt);
+        }
+    }
+
+
+    private async searchLegalLink(title: string): Promise<string> {
+        if (!this.config) return '';
+
+        try {
+            let url = '';
+
+            if (this.config.provider === 'gemini') {
+                // Gemini: Use grounding search to get real URLs
+                const prompt = `Tìm văn bản luật Việt Nam chính thức cho: "${title}". Ưu tiên kết quả từ thuvienphapluat.vn hoặc vbpl.vn.`;
+                const result = await this.callGemini(prompt);
+                if (result.groundingUrls.length > 0) {
+                    url = result.groundingUrls[0];
+                }
+            } else {
+                // OpenAI: Ask for URL in response and extract it
+                const prompt = `
+                    Bạn là hệ thống tra cứu pháp luật Việt Nam.
+
+                    Hãy tìm URL CHÍNH XÁC của văn bản:
+                    "${title}"
+
+                    Nguồn hợp lệ:
+                    - https://thuvienphapluat.vn
+                    - https://vbpl.vn
+
+                    Luật bắt buộc:
+                    - Không suy đoán
+                    - Không tạo URL theo mẫu
+                    - Chỉ trả URL nếu bạn chắc chắn văn bản tồn tại
+
+                    Output:
+                    - Nếu tìm thấy → chỉ in URL
+                    - Nếu không → NOT_FOUND
+                    `;
+
+                const result = await this.callOpenAI(prompt, 'gpt-4.1');
+                const urlMatch = result.match(/https?:\/\/[^\s"'<>]+/);
+                if (urlMatch && !result.includes('NOT_FOUND')) {
+                    url = urlMatch[0];
+                }
+            }
+
+            // Verify that the URL exists (not 404)
+            // if (url) {
+            //     const exists = await this.checkLinkExists(url);
+            //     if (!exists) {
+            //         console.warn(`Link not found (404): ${url}`);
+            //         return ''; // Return empty if URL doesn't exist
+            //     }
+            // }
+
+            return url;
+        } catch {
+            return '';
         }
     }
 
@@ -118,13 +186,15 @@ Trả về JSON với cấu trúc sau (không có markdown, chỉ JSON thuần):
       "quote": "Trích dẫn nguyên văn đoạn văn bản gây rủi ro",
       "scenarios": ["Ví dụ thực tế 1", "Ví dụ thực tế 2"],
       "legalReferences": [
-        { "title": "Tên văn bản (VD: Bộ luật Dân sự 2015, Điều 401)", "url": "Link đến văn bản pháp luật uy tín" }
+        { "title": "Tên văn bản", "url": "Link đến văn bản trên thuvienphapluat.vn hoặc vbpl.vn (Chỉ cung cấp nếu bạn chắc chắn 100% URL tồn tại, nếu không hãy để TRỐNG)" }
       ]
     }
   ]
 }
 
-CHÚ Ý: Ở phần "risks", bạn hãy thực hiện "Stress-test" hợp đồng để tìm ra các bẫy pháp lý, điều khoản mâu thuẫn hoặc bất lợi tiềm ẩn dựa trên pháp luật Việt Nam hiện hành.`;
+CHÚ Ý: 
+1. Ở phần "risks", hãy thực hiện "Stress-test" hợp đồng để tìm ra các bẫy pháp lý.
+2. Với các căn cứ pháp lý, chỉ cần trích xuất TÊN chính xác (VD: Bộ luật Dân sự 2015, Điều 401). Trường "url" có thể để trống.`;
 
         const response = await this.callAI(prompt);
 
@@ -142,6 +212,18 @@ CHÚ Ý: Ở phần "risks", bạn hãy thực hiện "Stress-test" hợp đồn
             }
 
             const analysis = JSON.parse(cleanResponse.trim());
+
+            // Step 2: Search for legal links deterministically based on titles
+            if (analysis.risks) {
+                await Promise.all(analysis.risks.map(async (risk: any) => {
+                    if (risk.legalReferences) {
+                        await Promise.all(risk.legalReferences.map(async (ref: any) => {
+                            ref.url = await this.searchLegalLink(ref.title);
+                        }));
+                    }
+                }));
+            }
+
             return {
                 ...analysis,
                 analyzedAt: new Date().toISOString(),
@@ -184,19 +266,14 @@ Trả về JSON array với cấu trúc sau (không có markdown, chỉ JSON thu
     "quote": "Trích dẫn nguyên văn đoạn văn bản gây rủi ro trong hợp đồng",
     "scenarios": ["Ví dụ thực tế 1", "Ví dụ thực tế 2"],
     "legalReferences": [
-      { "title": "Tên văn bản (VD: Bộ luật Dân sự 2015, Điều 401)", "url": "Link đến văn bản trên thuvienphapluat.vn hoặc link uy tín khác" }
+      { "title": "Tên văn bản (VD: Bộ luật Dân sự 2015, Điều 401)", "url": "Link đến văn bản trên thuvienphapluat.vn hoặc vbpl.vn (Chỉ cung cấp nếu bạn chắc chắn 100% URL tồn tại, nếu không hãy để TRỐNG)" }
     ]
   }
 ]
 
-Chú ý phát hiện:
-- Điều khoản bất lợi cho một bên
-- Phạt vi phạm quá cao
-- Giới hạn trách nhiệm không hợp lý
-- Điều khoản chấm dứt có lợi cho một bên
-- Chi phí ẩn
-- Điều khoản mơ hồ, thiếu rõ ràng
-- Vi phạm quy định pháp luật`;
+CHÚ Ý: 
+1. SỬ DỤNG GOOGLE SEARCH: Với mỗi rủi ro và căn cứ pháp lý, hãy sử dụng công cụ tìm kiếm của bạn để tìm link văn bản pháp luật chính xác nhất (ưu tiên thuvienphapluat.vn hoặc vbpl.vn) và đưa vào trường "url".
+2. TUYỆT ĐỐI KHÔNG tự bịa ra URL. Nếu không tìm thấy URL thực tế sau khi search, hãy bỏ trống trường "url".`;
 
         const response = await this.callAI(prompt);
 
@@ -212,7 +289,18 @@ Chú ý phát hiện:
                 cleanResponse = cleanResponse.slice(0, -3);
             }
 
-            return JSON.parse(cleanResponse.trim());
+            const risks = JSON.parse(cleanResponse.trim());
+
+            // Step 2: Search for legal links deterministically based on titles
+            await Promise.all(risks.map(async (risk: any) => {
+                if (risk.legalReferences) {
+                    await Promise.all(risk.legalReferences.map(async (ref: any) => {
+                        ref.url = await this.searchLegalLink(ref.title);
+                    }));
+                }
+            }));
+
+            return risks;
         } catch {
             return [];
         }
@@ -296,7 +384,7 @@ CÂU HỎI: ${question}
 
 Hãy trả lời bằng tiếng Việt, rõ ràng và chính xác. Nếu câu hỏi liên quan đến điều khoản cụ thể, hãy trích dẫn phần liên quan. Nếu không tìm thấy thông tin trong hợp đồng, hãy nói rõ điều đó.
 
-Trả về JSON với cấu trúc (không có markdown, chỉ JSON thuần):
+Trả về JSON with cấu trúc (không có markdown, chỉ JSON thuần):
 {
   "answer": "Câu trả lời chi tiết",
   "citations": ["Trích dẫn 1 từ hợp đồng", "Trích dẫn 2 nếu có"]
@@ -341,7 +429,7 @@ ${situation.description}
 CÁC VẤN ĐỀ PHÁT HIỆN:
 ${issuesText}
 
-Trả về JSON với cấu trúc (không có markdown, chỉ JSON thuần):
+Trả về JSON with cấu trúc (không có markdown, chỉ JSON thuần):
 {
   "gaps": [
     {
