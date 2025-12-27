@@ -21,12 +21,12 @@ import {
     Paper,
     Tabs,
     Tab,
+    Stack,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DescriptionIcon from '@mui/icons-material/Description';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import AssignmentIcon from '@mui/icons-material/Assignment';
-import WarningIcon from '@mui/icons-material/Warning';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import FileUpload from '../components/common/FileUpload';
@@ -75,7 +75,7 @@ const AnalysisPage: React.FC = () => {
     const [chatLoading, setChatLoading] = useState(false);
 
     // Get current chat session for the contract being analyzed
-    const currentSession = sessions.find(s => s.contractId === currentContract?.id);
+    const currentSession = sessions.find((s: ChatSession) => s.contractId === currentContract?.id);
 
     useEffect(() => {
         aiService.setConfig({
@@ -462,18 +462,22 @@ const AnalysisPage: React.FC = () => {
                                                 <Accordion key={index} defaultExpanded={index === 0}>
                                                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                                                            <WarningIcon
-                                                                color={
-                                                                    risk.severity === 'critical' || risk.severity === 'high'
-                                                                        ? 'error'
-                                                                        : risk.severity === 'medium'
-                                                                            ? 'warning'
-                                                                            : 'action'
-                                                                }
-                                                            />
-                                                            <Typography fontWeight={600} sx={{ flexGrow: 1 }}>
-                                                                {risk.title}
-                                                            </Typography>
+                                                            <Stack direction="row" alignItems="center" spacing={1} sx={{ flexGrow: 1 }}>
+                                                                <Chip
+                                                                    label={risk.severity.toUpperCase()}
+                                                                    color={
+                                                                        risk.severity === 'critical' || risk.severity === 'high'
+                                                                            ? 'error'
+                                                                            : risk.severity === 'medium'
+                                                                                ? 'warning'
+                                                                                : 'info'
+                                                                    }
+                                                                    size="small"
+                                                                />
+                                                                <Typography variant="subtitle1" fontWeight={600}>
+                                                                    {risk.title}
+                                                                </Typography>
+                                                            </Stack>
                                                             <RiskBadge severity={risk.severity} />
                                                         </Box>
                                                     </AccordionSummary>
@@ -546,23 +550,29 @@ const AnalysisPage: React.FC = () => {
                                                                     ⚖️ Căn cứ pháp lý:
                                                                 </Typography>
                                                                 <Box component="ul" sx={{ m: 0, pl: 2 }}>
-                                                                    {risk.legalReferences.map((ref, idx) => (
-                                                                        <li key={idx}>
-                                                                            <Typography
-                                                                                component="a"
-                                                                                href={ref.url}
-                                                                                target="_blank"
-                                                                                rel="noopener noreferrer"
-                                                                                variant="body2"
-                                                                                color="primary"
-                                                                                sx={{
-                                                                                    textDecoration: 'none',
-                                                                                    '&:hover': { textDecoration: 'underline' }
-                                                                                }}
-                                                                            >
-                                                                                {ref.title}
-                                                                            </Typography>
-                                                                        </li>
+                                                                    {risk.legalReferences.map((ref, rIdx) => (
+                                                                        <Box key={rIdx} component="li">
+                                                                            {ref.url ? (
+                                                                                <Typography
+                                                                                    component="a"
+                                                                                    href={ref.url}
+                                                                                    target="_blank"
+                                                                                    rel="noopener noreferrer"
+                                                                                    variant="caption"
+                                                                                    sx={{
+                                                                                        color: 'primary.main',
+                                                                                        textDecoration: 'none',
+                                                                                        '&:hover': { textDecoration: 'underline' }
+                                                                                    }}
+                                                                                >
+                                                                                    {ref.title}
+                                                                                </Typography>
+                                                                            ) : (
+                                                                                <Typography variant="caption" color="text.secondary">
+                                                                                    {ref.title}
+                                                                                </Typography>
+                                                                            )}
+                                                                        </Box>
                                                                     ))}
                                                                 </Box>
                                                             </Box>

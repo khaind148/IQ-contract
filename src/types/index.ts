@@ -60,7 +60,7 @@ export interface RiskItem {
   section: string;
   quote?: string;
   scenarios?: string[];
-  legalReferences?: { title: string; url: string }[];
+  legalReferences?: { title: string; docNumber?: string; article?: string; url?: string }[];
 }
 
 export type RiskCategory =
