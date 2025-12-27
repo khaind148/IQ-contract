@@ -14,13 +14,13 @@ import WarningIcon from '@mui/icons-material/Warning';
 import FolderIcon from '@mui/icons-material/Folder';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import { useAppSelector, useAppDispatch } from '../store';
+import { useAppSelector } from '../store';
 import ContractDetailModal from '../components/common/ContractDetailModal';
 import type { Contract } from '../types';
 
 const Dashboard: React.FC = () => {
     const navigate = useNavigate();
-    const dispatch = useAppDispatch();
+    // const dispatch = useAppDispatch();
 
     // Safety fix: Ensure body scroll is not locked
     useEffect(() => {

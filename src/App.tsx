@@ -37,12 +37,12 @@ const ThemedApp: React.FC = () => {
 };
 
 // Coming Soon placeholder for other pages
-const ComingSoon: React.FC<{ title: string }> = ({ title }) => (
-  <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-    <h2 style={{ marginBottom: '16px' }}>{title}</h2>
-    <p style={{ color: '#888' }}>Tính năng đang được phát triển...</p>
-  </div>
-);
+// const ComingSoon: React.FC<{ title: string }> = ({ title }) => (
+//   <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+//     <h2 style={{ marginBottom: '16px' }}>{title}</h2>
+//     <p style={{ color: '#888' }}>Tính năng đang được phát triển...</p>
+//   </div>
+// );
 
 const App: React.FC = () => {
   return (

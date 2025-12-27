@@ -14,10 +14,10 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
-import CompareIcon from '@mui/icons-material/Compare';
+// import CompareIcon from '@mui/icons-material/Compare';
 import ChatIcon from '@mui/icons-material/Chat';
 import FolderIcon from '@mui/icons-material/Folder';
-import FactCheckIcon from '@mui/icons-material/FactCheck';
+// import FactCheckIcon from '@mui/icons-material/FactCheck';
 import SettingsIcon from '@mui/icons-material/Settings';
 
 interface SidebarProps {
