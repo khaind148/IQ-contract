@@ -108,6 +108,71 @@ const ContractDetailModal: React.FC<ContractDetailModalProps> = ({ open, onClose
                                                 <Typography variant="body2" color="text.secondary" paragraph>
                                                     {risk.description}
                                                 </Typography>
+
+                                                {/* Quote */}
+                                                {risk.quote && (
+                                                    <Paper
+                                                        variant="outlined"
+                                                        sx={{
+                                                            p: 2,
+                                                            mb: 2,
+                                                            borderLeft: `4px solid #ed6c02`, // Warning color
+                                                            bgcolor: 'action.hover',
+                                                            fontStyle: 'italic',
+                                                        }}
+                                                    >
+                                                        <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                                            Trích dẫn nguyên văn:
+                                                        </Typography>
+                                                        "{risk.quote}"
+                                                    </Paper>
+                                                )}
+
+                                                {/* Scenarios */}
+                                                {risk.scenarios && risk.scenarios.length > 0 && (
+                                                    <Box sx={{ mb: 2 }}>
+                                                        <Typography variant="caption" fontWeight={700} color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                                                            🎭 Kịch bản thực tế:
+                                                        </Typography>
+                                                        <Box component="ul" sx={{ m: 0, pl: 2 }}>
+                                                            {risk.scenarios.map((scenario, sIdx) => (
+                                                                <Typography key={sIdx} component="li" variant="caption" color="text.secondary">
+                                                                    {scenario}
+                                                                </Typography>
+                                                            ))}
+                                                        </Box>
+                                                    </Box>
+                                                )}
+
+                                                {/* Legal References */}
+                                                {risk.legalReferences && risk.legalReferences.length > 0 && (
+                                                    <Box sx={{ mb: 2 }}>
+                                                        <Typography variant="caption" fontWeight={700} color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                                                            ⚖️ Căn cứ pháp lý:
+                                                        </Typography>
+                                                        <Box component="ul" sx={{ m: 0, pl: 2 }}>
+                                                            {risk.legalReferences.map((ref, rIdx) => (
+                                                                <Box key={rIdx} component="li">
+                                                                    <Typography
+                                                                        component="a"
+                                                                        href={ref.url}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        variant="caption"
+                                                                        sx={{
+                                                                            color: 'primary.main',
+                                                                            textDecoration: 'none',
+                                                                            '&:hover': { textDecoration: 'underline' }
+                                                                        }}
+                                                                    >
+                                                                        {ref.title}
+                                                                    </Typography>
+                                                                </Box>
+                                                            ))}
+                                                        </Box>
+                                                    </Box>
+                                                )}
+
                                                 <Box sx={{ bgcolor: 'success.main', color: 'white', p: 1.5, borderRadius: 1, display: 'flex', gap: 1 }}>
                                                     <LightbulbIcon fontSize="small" />
                                                     <Box>

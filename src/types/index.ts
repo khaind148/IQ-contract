@@ -58,6 +58,9 @@ export interface RiskItem {
   category: RiskCategory;
   suggestion: string;
   section: string;
+  quote?: string;
+  scenarios?: string[];
+  legalReferences?: { title: string; url: string }[];
 }
 
 export type RiskCategory =

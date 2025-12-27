@@ -14,7 +14,6 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
-import WarningIcon from '@mui/icons-material/Warning';
 import CompareIcon from '@mui/icons-material/Compare';
 import ChatIcon from '@mui/icons-material/Chat';
 import FolderIcon from '@mui/icons-material/Folder';
@@ -30,7 +29,6 @@ interface SidebarProps {
 const menuItems = [
     { text: 'Tổng quan', icon: <DashboardIcon />, path: '/' },
     { text: 'Phân tích hợp đồng', icon: <AnalyticsIcon />, path: '/analysis' },
-    { text: 'Phát hiện rủi ro', icon: <WarningIcon />, path: '/risks' },
     { text: 'So sánh hợp đồng', icon: <CompareIcon />, path: '/compare' },
     { text: 'Hỏi đáp AI', icon: <ChatIcon />, path: '/chat' },
     { text: 'Quản lý hợp đồng', icon: <FolderIcon />, path: '/management' },

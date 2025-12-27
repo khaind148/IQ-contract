@@ -7,7 +7,6 @@ import { lightTheme, darkTheme } from './theme';
 import MainLayout from './components/layout/MainLayout';
 import Dashboard from './pages/Dashboard';
 import AnalysisPage from './pages/AnalysisPage';
-import RiskDetectionPage from './pages/RiskDetectionPage';
 import ChatPage from './pages/ChatPage';
 import SettingsPage from './pages/SettingsPage';
 import ManagementPage from './pages/ManagementPage';
@@ -25,7 +24,6 @@ const ThemedApp: React.FC = () => {
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="analysis" element={<AnalysisPage />} />
-            <Route path="risks" element={<RiskDetectionPage />} />
             <Route path="compare" element={<ComingSoon title="So sánh hợp đồng" />} />
             <Route path="chat" element={<ChatPage />} />
             <Route path="management" element={<ManagementPage />} />

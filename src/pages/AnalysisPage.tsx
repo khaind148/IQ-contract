@@ -476,6 +476,25 @@ const AnalysisPage: React.FC = () => {
                                                         <Typography variant="body2" paragraph>
                                                             {risk.description}
                                                         </Typography>
+                                                        {risk.quote && (
+                                                            <Paper
+                                                                sx={{
+                                                                    p: 2,
+                                                                    my: 2,
+                                                                    borderLeft: `4px solid ${theme.palette.warning.main}`,
+                                                                    background: theme.palette.mode === 'dark'
+                                                                        ? 'rgba(255, 167, 38, 0.05)'
+                                                                        : 'rgba(255, 167, 38, 0.05)',
+                                                                    fontStyle: 'italic',
+                                                                    color: 'text.secondary',
+                                                                }}
+                                                            >
+                                                                <Typography variant="body2" fontWeight={500} gutterBottom>
+                                                                    Original Text:
+                                                                </Typography>
+                                                                "{risk.quote}"
+                                                            </Paper>
+                                                        )}
                                                         <Paper
                                                             sx={{
                                                                 p: 2,
@@ -498,6 +517,51 @@ const AnalysisPage: React.FC = () => {
                                                             variant="outlined"
                                                             sx={{ mt: 2 }}
                                                         />
+
+                                                        {/* Scenarios */}
+                                                        {risk.scenarios && risk.scenarios.length > 0 && (
+                                                            <Box sx={{ mt: 2 }}>
+                                                                <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                                                                    🎭 Kịch bản thực tế:
+                                                                </Typography>
+                                                                <Box component="ul" sx={{ m: 0, pl: 2 }}>
+                                                                    {risk.scenarios.map((scenario, idx) => (
+                                                                        <Typography component="li" variant="body2" key={idx}>
+                                                                            {scenario}
+                                                                        </Typography>
+                                                                    ))}
+                                                                </Box>
+                                                            </Box>
+                                                        )}
+
+                                                        {/* Legal References */}
+                                                        {risk.legalReferences && risk.legalReferences.length > 0 && (
+                                                            <Box sx={{ mt: 2 }}>
+                                                                <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                                                                    ⚖️ Căn cứ pháp lý:
+                                                                </Typography>
+                                                                <Box component="ul" sx={{ m: 0, pl: 2 }}>
+                                                                    {risk.legalReferences.map((ref, idx) => (
+                                                                        <li key={idx}>
+                                                                            <Typography
+                                                                                component="a"
+                                                                                href={ref.url}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                variant="body2"
+                                                                                color="primary"
+                                                                                sx={{
+                                                                                    textDecoration: 'none',
+                                                                                    '&:hover': { textDecoration: 'underline' }
+                                                                                }}
+                                                                            >
+                                                                                {ref.title}
+                                                                            </Typography>
+                                                                        </li>
+                                                                    ))}
+                                                                </Box>
+                                                            </Box>
+                                                        )}
                                                     </AccordionDetails>
                                                 </Accordion>
                                             ))}

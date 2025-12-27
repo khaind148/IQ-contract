@@ -54,10 +54,10 @@ class AIService {
                 'Authorization': `Bearer ${this.config.apiKey}`,
             },
             body: JSON.stringify({
-                model: 'gpt-4o-mini',
+                model: 'gpt-5-nano',
                 messages: [{ role: 'user', content: prompt }],
-                temperature: 0.7,
-                max_tokens: 4096,
+                // temperature: 0.7,
+                // max_tokens: 4096,
             }),
         });
 
@@ -83,7 +83,13 @@ class AIService {
     }
 
     async analyzeContract(contractText: string): Promise<ContractAnalysis> {
-        const prompt = `Bạn là chuyên gia pháp lý phân tích hợp đồng. Hãy phân tích hợp đồng sau và trả về kết quả theo định dạng JSON chính xác.
+        const prompt = `Bạn là Luật sư cao cấp chuyên trách rà soát hợp đồng. 
+Hãy phân tích hợp đồng dưới đây và trích xuất dữ liệu chính xác vào định dạng JSON.
+
+NHIỆM VỤ CỤ THỂ:
+1. Xác định các rủi ro tiềm ẩn (bất lợi về phạt vi phạm, đơn phương chấm dứt, hoặc câu từ mơ hồ).
+2. Trích xuất các mốc thời gian quan trọng.
+3. Tóm tắt nghĩa vụ trọng yếu của từng bên.
 
 HỢP ĐỒNG:
 ${contractText}
@@ -103,15 +109,22 @@ Trả về JSON với cấu trúc sau (không có markdown, chỉ JSON thuần):
   "risks": [
     {
       "id": "risk_1",
-      "title": "Tiêu đề rủi ro",
-      "description": "Mô tả chi tiết",
+      "title": "Tên rủi ro ngắn gọn",
+      "description": "Phân tích sâu tại sao điều khoản này gây bất lợi",
       "severity": "critical|high|medium|low",
       "category": "liability|termination|penalty|hidden_cost|ambiguity|compliance|other",
-      "suggestion": "Đề xuất xử lý",
-      "section": "Điều X"
+      "suggestion": "Đề xuất sửa đổi cụ thể",
+      "section": "Điều khoản liên quan (VD: Điều 5.1)",
+      "quote": "Trích dẫn nguyên văn đoạn văn bản gây rủi ro",
+      "scenarios": ["Ví dụ thực tế 1", "Ví dụ thực tế 2"],
+      "legalReferences": [
+        { "title": "Tên văn bản (VD: Bộ luật Dân sự 2015, Điều 401)", "url": "Link đến văn bản pháp luật uy tín" }
+      ]
     }
   ]
-}`;
+}
+
+CHÚ Ý: Ở phần "risks", bạn hãy thực hiện "Stress-test" hợp đồng để tìm ra các bẫy pháp lý, điều khoản mâu thuẫn hoặc bất lợi tiềm ẩn dựa trên pháp luật Việt Nam hiện hành.`;
 
         const response = await this.callAI(prompt);
 
@@ -147,21 +160,32 @@ Trả về JSON với cấu trúc sau (không có markdown, chỉ JSON thuần):
     }
 
     async detectRisks(contractText: string): Promise<RiskItem[]> {
-        const prompt = `Bạn là chuyên gia pháp lý chuyên phát hiện rủi ro trong hợp đồng. Hãy phân tích kỹ hợp đồng sau và liệt kê TẤT CẢ các rủi ro pháp lý tiềm ẩn.
+        const prompt = `Bạn là một Luật sư tranh tụng sắc sảo. Hãy thực hiện "Stress-test" hợp đồng này để tìm ra các bẫy pháp lý và rủi ro tiềm ẩn dựa trên pháp luật Việt Nam hiện hành.
 
 HỢP ĐỒNG:
 ${contractText}
+
+YÊU CẦU:
+Với mỗi rủi ro tìm thấy, bạn phải phân tích cực kỳ chi tiết theo định dạng JSON bên dưới.
+1. "description": Phân tích sâu tại sao điều khoản này gây bất lợi.
+2. "scenarios": Đưa ra ít nhất 1 ví dụ cụ thể về tình huống thực tế mà rủi ro này sẽ gây thiệt hại cho người dùng.
+3. "legal_reference": Chỉ rõ điều khoản này có khả năng vi phạm hoặc mâu thuẫn với luật mới nhất nào.
 
 Trả về JSON array với cấu trúc sau (không có markdown, chỉ JSON thuần):
 [
   {
     "id": "risk_1",
-    "title": "Tiêu đề rủi ro ngắn gọn",
-    "description": "Mô tả chi tiết về rủi ro và tại sao nó nguy hiểm",
+    "title": "Tên rủi ro ngắn gọn",
+    "description": "Mô tả chi tiết rủi ro và tác động",
     "severity": "critical|high|medium|low",
     "category": "liability|termination|penalty|hidden_cost|ambiguity|compliance|other",
-    "suggestion": "Đề xuất cách xử lý hoặc sửa đổi điều khoản",
-    "section": "Điều X hoặc phần liên quan"
+    "suggestion": "Đề xuất sửa đổi cụ thể",
+    "section": "Điều khoản liên quan (VD: Điều 5.1)",
+    "quote": "Trích dẫn nguyên văn đoạn văn bản gây rủi ro trong hợp đồng",
+    "scenarios": ["Ví dụ thực tế 1", "Ví dụ thực tế 2"],
+    "legalReferences": [
+      { "title": "Tên văn bản (VD: Bộ luật Dân sự 2015, Điều 401)", "url": "Link đến văn bản trên thuvienphapluat.vn hoặc link uy tín khác" }
+    ]
   }
 ]
 
