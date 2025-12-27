@@ -499,7 +499,7 @@ const AnalysisPage: React.FC = () => {
                                                                 }}
                                                             >
                                                                 <Typography variant="body2" fontWeight={500} gutterBottom>
-                                                                    Original Text:
+                                                                    Văn bản gốc:
                                                                 </Typography>
                                                                 "{risk.quote}"
                                                             </Paper>
