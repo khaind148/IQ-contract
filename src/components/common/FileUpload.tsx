@@ -19,10 +19,10 @@ interface FileUploadProps {
 
 const FileUpload: React.FC<FileUploadProps> = ({
     onFileSelect,
-    accept = '.pdf,.txt',
+    accept = 'png,jpg,jpeg,doc,docx,pdf,txt',
     loading = false,
     label = 'Tải lên hợp đồng',
-    description = 'Kéo thả file hoặc click để chọn (PDF, TXT)',
+    description = 'Kéo thả file hoặc click để chọn (PNG, JPG, JPEG, DOC, DOCX, PDF, TXT)',
 }) => {
     const theme = useTheme();
     const [dragActive, setDragActive] = useState(false);

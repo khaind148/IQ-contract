@@ -27,7 +27,6 @@ const MainLayout: React.FC = () => {
                     flexGrow: 1,
                     p: 3,
                     width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
-                    ml: { sm: `${DRAWER_WIDTH}px` },
                     background: (theme) =>
                         theme.palette.mode === 'dark'
                             ? 'linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)'
