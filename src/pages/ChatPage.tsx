@@ -8,7 +8,6 @@ import {
     InputLabel,
     Select,
     MenuItem,
-    Alert,
 } from '@mui/material';
 import { useAppSelector } from '../store';
 import ChatBox from '../components/common/ChatBox';
