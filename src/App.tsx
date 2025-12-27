@@ -7,6 +7,8 @@ import { lightTheme, darkTheme } from './theme';
 import MainLayout from './components/layout/MainLayout';
 import Dashboard from './pages/Dashboard';
 import AnalysisPage from './pages/AnalysisPage';
+import RiskDetectionPage from './pages/RiskDetectionPage';
+import ChatPage from './pages/ChatPage';
 import SettingsPage from './pages/SettingsPage';
 
 // Theme wrapper component
@@ -22,9 +24,9 @@ const ThemedApp: React.FC = () => {
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="analysis" element={<AnalysisPage />} />
-            <Route path="risks" element={<ComingSoon title="Phát hiện rủi ro" />} />
+            <Route path="risks" element={<RiskDetectionPage />} />
             <Route path="compare" element={<ComingSoon title="So sánh hợp đồng" />} />
-            <Route path="chat" element={<ComingSoon title="Hỏi đáp AI" />} />
+            <Route path="chat" element={<ChatPage />} />
             <Route path="management" element={<ComingSoon title="Quản lý hợp đồng" />} />
             <Route path="reality" element={<ComingSoon title="So sánh thực tế" />} />
             <Route path="settings" element={<SettingsPage />} />

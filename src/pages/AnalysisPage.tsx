@@ -31,6 +31,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import FileUpload from '../components/common/FileUpload';
 import RiskBadge from '../components/common/RiskBadge';
+import ChatBox from '../components/common/ChatBox';
 import { useAppDispatch, useAppSelector } from '../store';
 import { addContract, setLoading, setError } from '../store/slices/contractSlice';
 import { extractTextFromFile } from '../services/pdfService';
@@ -82,7 +83,7 @@ const AnalysisPage: React.FC = () => {
 
         try {
             // Extract text from file
-            const text = await extractTextFromFile(file);
+            const text = await extractTextFromFile(file, settings.apiKey, settings.apiProvider);
             setExtractedText(text);
 
             // Create contract object
@@ -121,6 +122,13 @@ const AnalysisPage: React.FC = () => {
         setTabValue(newValue);
     };
 
+    const handleChatMessage = async (question: string, history: string[]) => {
+        if (!extractedText) {
+            throw new Error('Không có nội dung hợp đồng để hỏi đáp');
+        }
+        return await aiService.chatWithContract(extractedText, question, history);
+    };
+
     return (
         <Box>
             {/* Header */}
@@ -146,7 +154,7 @@ const AnalysisPage: React.FC = () => {
                                 onFileSelect={handleFileSelect}
                                 loading={loading}
                                 label="Chọn file hợp đồng"
-                                description="Hỗ trợ PDF, TXT (Tối đa 10MB)"
+                                description="Hỗ trợ PDF, TXT, PNG, JPG, JPEG, DOC, DOCX (Tối đa 10MB)"
                             />
 
                             {error && (
@@ -240,6 +248,7 @@ const AnalysisPage: React.FC = () => {
                                     <Tab label="Ngày quan trọng" />
                                     <Tab label="Nghĩa vụ" />
                                     <Tab label={`Rủi ro (${analysis.risks.length})`} />
+                                    <Tab label="💬 Hỏi đáp AI" />
                                 </Tabs>
 
                                 {/* Summary Tab */}
@@ -418,6 +427,13 @@ const AnalysisPage: React.FC = () => {
                                             Không phát hiện rủi ro đáng kể trong hợp đồng này
                                         </Alert>
                                     )}
+                                </TabPanel>
+
+                                {/* Chat Tab */}
+                                <TabPanel value={tabValue} index={5}>
+                                    <ChatBox
+                                        onSendMessage={handleChatMessage}
+                                    />
                                 </TabPanel>
                             </CardContent>
                         </Card>
